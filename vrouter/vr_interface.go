@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 
 	"github.com/shun159/vr/vr"
 	"golang.org/x/sys/unix"
@@ -472,6 +473,7 @@ func (pkt0 *Pkt0Device) Init() error {
 		return errmsg
 	}
 
+	ifr.SetUint16(1)
 	if err := unix.IoctlIfreq(
 		tap_fd,
 		unix.TUNSETPERSIST,
@@ -541,6 +543,15 @@ func (pkt0 *Pkt0Device) Init() error {
 	pkt0.Index = iface.Index
 	pkt0.HardwareAddr = iface.HardwareAddr
 	pkt0.TapFD = tap_fd
+
+	return nil
+}
+
+func (pkt0 *Pkt0Device) Close() error {
+	err := exec.Command("ip", "link", "del", PKT0_IFNAME).Run()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
