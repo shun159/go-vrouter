@@ -252,3 +252,30 @@ func TestNexthop(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAddRoute(t *testing.T) {
+	vr_msg, err := vrouter.NewVrMessage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer checkCloseVrif(vr_msg, t)
+
+	ret, err := vr_msg.AddRoute(
+		vrouter.RouteRid(0),
+		vrouter.RouteVrfId(0),
+		vrouter.RouteFamily(unix.AF_INET),
+		vrouter.RouteMac([]int8{0, 0, 0, 0, 0, 0}),
+		vrouter.RoutePrefix([]int8{1, 2, 3, 4}),
+		vrouter.RoutePrefixLen(32),
+		vrouter.RouteNhId(vr.NH_DISCARD_ID),
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != 0 {
+		t.Fatalf("failed to add route: resp_code should be 0")
+	}
+}
