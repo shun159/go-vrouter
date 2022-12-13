@@ -17,6 +17,6 @@ This library allows Go program to control the vrouter directly via netlink.
 
 ## Installation
 
-```shellsession
-$ go install github.com/shun159/go-vrouter
+```golang
+import "github.com/shun159/go-vrouter/vrouter"
 ```
