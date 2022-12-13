@@ -279,6 +279,8 @@ func (vr_msg *VrMessage) DumpVif(setters ...VifOption) ([]vr.VrInterfaceReq, err
 	r.HOp = vr.SandeshOp_DUMP
 	r.VifrIdx = -1
 
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
+
 	for _, setter := range setters {
 		setter(r)
 	}
@@ -308,13 +310,14 @@ func (vr_msg *VrMessage) DumpVif(setters ...VifOption) ([]vr.VrInterfaceReq, err
 		}
 	}
 
-	vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 	return vifs, nil
 }
 
 func (vr_msg *VrMessage) GetVif(setters ...VifOption) (*vr.VrInterfaceReq, error) {
 	r := vr.NewVrInterfaceReq()
 	r.HOp = vr.SandeshOp_GET
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	for _, setter := range setters {
 		setter(r)
@@ -337,13 +340,14 @@ func (vr_msg *VrMessage) GetVif(setters ...VifOption) (*vr.VrInterfaceReq, error
 		return nil, errmsg
 	}
 
-	vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 	return vif, nil
 }
 
-func (vr_msg *VrMessage) AddVif(setters ...VifOption) (int16, error) {
+func (vr_msg *VrMessage) AddVif(setters ...VifOption) (int32, error) {
 	r := vr.NewVrInterfaceReq()
 	r.HOp = vr.SandeshOp_ADD
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	for _, setter := range setters {
 		setter(r)
@@ -360,17 +364,14 @@ func (vr_msg *VrMessage) AddVif(setters ...VifOption) (int16, error) {
 		return -1, errmsg
 	}
 
-	ret, err := vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
-	if err != nil {
-		return -1, err
-	}
-
-	return ret, nil
+	return vr_resp.RespCode, nil
 }
 
-func (vr_msg *VrMessage) DelVif(setters ...VifOption) (int16, error) {
+func (vr_msg *VrMessage) DelVif(setters ...VifOption) (int32, error) {
 	r := vr.NewVrInterfaceReq()
 	r.HOp = vr.SandeshOp_DEL
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	for _, setter := range setters {
 		setter(r)
@@ -387,18 +388,15 @@ func (vr_msg *VrMessage) DelVif(setters ...VifOption) (int16, error) {
 		return -1, errmsg
 	}
 
-	ret, err := vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
-	if err != nil {
-		return -1, err
-	}
-
-	return ret, nil
+	return vr_resp.RespCode, nil
 }
 
 func (vr_msg *VrMessage) ResetStatsVif(setters ...VifOption) (*vr.VrInterfaceReq, error) {
 	r := vr.NewVrInterfaceReq()
 	r.HOp = vr.SandeshOp_RESET
 	r.VifrIdx = -1
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	for _, setter := range setters {
 		setter(r)
@@ -421,7 +419,6 @@ func (vr_msg *VrMessage) ResetStatsVif(setters ...VifOption) (*vr.VrInterfaceReq
 		return nil, errmsg
 	}
 
-	vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 	return vif, nil
 }
 

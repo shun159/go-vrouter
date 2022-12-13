@@ -164,7 +164,7 @@ func PriorityTagging(flag int32) VRouterOption {
 	}
 }
 
-func (vr_msg *VrMessage) UpdateVRouter(setters ...VRouterOption) (int16, error) {
+func (vr_msg *VrMessage) UpdateVRouter(setters ...VRouterOption) (int32, error) {
 	args := &vr_raw.VrouterOps{}
 	args.HOp = vr.SandeshOp_ADD
 	args.VoLogLevel = -1
@@ -190,6 +190,8 @@ func (vr_msg *VrMessage) UpdateVRouter(setters ...VRouterOption) (int16, error) 
 	args.VoPriorityTagging = -1
 	args.VoPacketDump = -1
 
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
+
 	for _, setter := range setters {
 		setter(args)
 	}
@@ -204,17 +206,14 @@ func (vr_msg *VrMessage) UpdateVRouter(setters ...VRouterOption) (int16, error) 
 		return -1, errmsg
 	}
 
-	ret, err := vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
-	if err != nil {
-		return -1, err
-	}
-
-	return ret, nil
+	return vr_resp.RespCode, nil
 }
 
 func (vr_msg *VrMessage) GetVRouter() (*vr.VrouterOps, error) {
 	vr_req := &vr_raw.VrouterOps{}
 	vr_req.HOp = vr.SandeshOp_GET
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	vr_resp, err := vr_msg.sync(vr_req)
 	if err != nil {
@@ -235,9 +234,11 @@ func (vr_msg *VrMessage) GetVRouter() (*vr.VrouterOps, error) {
 	return vro, nil
 }
 
-func (vr_msg *VrMessage) ResetVRouter() (int16, error) {
+func (vr_msg *VrMessage) ResetVRouter() (int32, error) {
 	vr_req := &vr_raw.VrouterOps{}
 	vr_req.HOp = vr.SandeshOp_RESET
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
 
 	vr_resp, err := vr_msg.sync(vr_req)
 	if err != nil {
@@ -249,12 +250,7 @@ func (vr_msg *VrMessage) ResetVRouter() (int16, error) {
 		return -1, errmsg
 	}
 
-	ret, err := vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
-	if err != nil {
-		return -1, err
-	}
-
-	return ret, nil
+	return vr_resp.RespCode, nil
 }
 
 type HugePageOption func(*vr.VrHugepageConfig)
