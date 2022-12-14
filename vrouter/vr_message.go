@@ -16,18 +16,14 @@ import (
 	vr_raw "github.com/shun159/vr/vr"
 )
 
-//
 // Sandesh protocol and transport
-//
 type Sandesh struct {
 	context   context.Context
 	transport *thrift.TMemoryBuffer
 	protocol  *vr.TSandeshProtocol
 }
 
-//
 // Instantiate Sandesh protocol
-//
 func newSandesh() *Sandesh {
 	mem_buffer := thrift.NewTMemoryBuffer()
 	vrouter := vr.NewTSandeshProtocolTransport(mem_buffer)

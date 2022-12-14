@@ -238,7 +238,7 @@ func TestVxlanReq(t *testing.T) {
 	}
 }
 
-func TestNexthop(t *testing.T) {
+func TestDelNexthop(t *testing.T) {
 	vr_msg, err := vrouter.NewVrMessage()
 	if err != nil {
 		t.Fatal(err)
@@ -266,7 +266,7 @@ func TestAddRoute(t *testing.T) {
 		vrouter.RouteVrfId(0),
 		vrouter.RouteFamily(unix.AF_INET),
 		vrouter.RouteMac([]int8{0, 0, 0, 0, 0, 0}),
-		vrouter.RoutePrefix([]int8{1, 2, 3, 4}),
+		vrouter.RoutePrefix([]int8{100, 100, 100, 100}),
 		vrouter.RoutePrefixLen(32),
 		vrouter.RouteNhId(vr.NH_DISCARD_ID),
 	)
@@ -277,5 +277,55 @@ func TestAddRoute(t *testing.T) {
 
 	if ret != 0 {
 		t.Fatalf("failed to add route: resp_code should be 0")
+	}
+}
+
+func TestGetRoute(t *testing.T) {
+	vr_msg, err := vrouter.NewVrMessage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer checkCloseVrif(vr_msg, t)
+
+	rt, err := vr_msg.GetRoute(
+		vrouter.RouteVrfId(0),
+		vrouter.RouteFamily(unix.AF_INET),
+		vrouter.RouteMac([]int8{0, 0, 0, 0, 0, 0}),
+		vrouter.RoutePrefix([]int8{100, 100, 100, 100}),
+		vrouter.RoutePrefixLen(32),
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rt == nil {
+		t.Fatal(rt)
+	}
+}
+
+func TestDumpRoute(t *testing.T) {
+	vr_msg, err := vrouter.NewVrMessage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer checkCloseVrif(vr_msg, t)
+
+	rt, err := vr_msg.DumpRoute(
+		vrouter.RouteVrfId(0),
+		vrouter.RouteFamily(unix.AF_INET),
+		vrouter.RouteMac([]int8{0, 0, 0, 0, 0, 0}),
+		vrouter.RoutePrefix([]int8{0, 0, 0, 0}),
+		vrouter.RouteMarker([]int8{100, 100, 100, 0}),
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(rt) < 1 {
+		t.Fatal(rt)
 	}
 }

@@ -62,11 +62,7 @@ func OpenNetlinkSocket(protocol int) (*NetlinkSocket, error) {
 	return &NetlinkSocket{
 		fd:   fd,
 		addr: nladdr,
-
-		// netlink messages can be bigger than this, but it
-		// seems unlikely in practice, and this is similar to
-		// the limit that the OVS userspace imposes.
-		buf: make([]byte, 65536),
+		buf:  make([]byte, 65536),
 	}, nil
 }
 
@@ -606,10 +602,7 @@ func (s *NetlinkSocket) Receive(consumer func(*NlMsgParser) (bool, error)) error
 	}
 }
 
-// Some generic netlink operations always return a reply message (e.g
-// *_GET), others don't by default (e.g. *_NEW).  In the latter case,
-// NLM_F_ECHO forces a reply.  This is undocumented AFAICT.
-const RequestFlags = syscall.NLM_F_REQUEST | syscall.NLM_F_ECHO
+const RequestFlags = syscall.NLM_F_REQUEST
 
 // Do a netlink request that yields a single response message.
 func (s *NetlinkSocket) Request(req *NlMsgBuilder) (resp *NlMsgParser, err error) {
@@ -627,8 +620,6 @@ func (s *NetlinkSocket) Request(req *NlMsgBuilder) (resp *NlMsgParser, err error
 	})
 	return
 }
-
-const DumpFlags = syscall.NLM_F_DUMP | syscall.NLM_F_REQUEST | syscall.NLM_F_MULTI
 
 // Do a netlink request that yield multiple response messages.
 func (s *NetlinkSocket) RequestMulti(req *NlMsgBuilder, consumer func(*NlMsgParser) error) error {

@@ -5,6 +5,7 @@
 package vrouter
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/shun159/vr/vr"
@@ -114,6 +115,36 @@ func (vr_msg *VrMessage) AddRoute(setters ...RouteOption) (int32, error) {
 	return vr_resp.RespCode, nil
 }
 
+func (vr_msg *VrMessage) GetRoute(setters ...RouteOption) (*vr.VrRouteReq, error) {
+	r := vr.NewVrRouteReq()
+	r.HOp = vr.SandeshOp_GET
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
+
+	for _, setter := range setters {
+		setter(r)
+	}
+
+	vr_resp, err := vr_msg.sync(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if vr_resp.RespCode < 0 {
+		resp_code := vr_resp.RespCode
+		errmsg := fmt.Errorf("failed to create route with non-zero resp-code: %v", resp_code)
+		return nil, errmsg
+	}
+
+	rt := vr.NewVrRouteReq()
+	if err := rt.Read(vr_msg.sandesh.context, vr_msg.sandesh.protocol); err != nil {
+		errmsg := fmt.Errorf("failed to parse binary into vr_route: %s", err)
+		return nil, errmsg
+	}
+
+	return rt, nil
+}
+
 func (vr_msg *VrMessage) DelRoute(setters ...RouteOption) (int32, error) {
 	r := vr.NewVrRouteReq()
 	r.HOp = vr.SandeshOp_DEL
@@ -136,4 +167,42 @@ func (vr_msg *VrMessage) DelRoute(setters ...RouteOption) (int32, error) {
 	}
 
 	return vr_resp.RespCode, nil
+}
+
+func (vr_msg VrMessage) DumpRoute(setters ...RouteOption) ([]vr.VrRouteReq, error) {
+	r := vr.NewVrRouteReq()
+	r.HOp = vr.SandeshOp_DUMP
+
+	defer vr_msg.sandesh.protocol.ReadI16(vr_msg.sandesh.context)
+
+	for _, setter := range setters {
+		setter(r)
+	}
+
+	route_list := []vr.VrRouteReq{}
+	vr_resp, multipart, err := vr_msg.syncMultipart(r)
+	if err != nil {
+		return route_list, err
+	}
+
+	if vr_resp.RespCode < 0 {
+		resp_code := vr_resp.RespCode
+		errmsg := fmt.Errorf("failed to dump route. non-zero resp-code: %v", resp_code)
+		return route_list, errmsg
+	}
+
+	for _, m := range multipart {
+		buf := bytes.NewBuffer(m.data)
+		vr_msg.sandesh.transport.Buffer = buf
+		for vr_msg.sandesh.transport.Buffer.Len() > 4 {
+			nh := vr.NewVrRouteReq()
+			if err := nh.Read(vr_msg.sandesh.context, vr_msg.sandesh.protocol); err != nil {
+				fmt.Printf("failed to parse vr_route: %v", err)
+				break
+			}
+			route_list = append(route_list, *nh)
+		}
+	}
+
+	return route_list, nil
 }
