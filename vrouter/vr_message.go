@@ -44,7 +44,7 @@ type VrMessage struct {
 
 const FUEMessage = `Generic netlink family '%s' unavailable; 
 the vrouter kernel module is probably not loaded,
-try 'modprobe openvswitch'
+try 'modprobe vrouter'
 `
 
 type familyUnavailableError struct {
